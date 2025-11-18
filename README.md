@@ -78,3 +78,33 @@ And open http://127.0.0.1:8000/contactbook/test and click the buttons to test ma
 - Add caching if the contact book is huge.
 - Apply ElasticSearch or other apporaches if the contact book is bigger than huge.
 - When deleting things, fake the delete first and perform the deletion using a timed task, just in case things are deleted by accident.
+
+## API Overview
+
+**Contact**
+
+| Method   | URL Example                                        | Description                                                          | Body Example                                                           |
+| -------- | -------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| **POST** | `/contact/create`                                  | Create a new contact                                                 | `{ "name": "Smart boss", "email": "smart@smart.pr", "phone": "112" }` |
+| **GET**  | `/contact/list`                                    | List all contacts                                                    | *(none)*                                                               |
+| **GET**  | `/contact/list?labels=friends,favorites`           | Filter contacts by **ANY** of the given labels (`match=or`, default) | *(none)*                                                               |
+| **GET**  | `/contact/list?labels=friends,favorites&match=and` | Filter contacts by **ALL** labels (`match=and`)                      | *(none)*                                                               |
+| **GET**  | `/contact/list?labels=friends&emails_only=1`       | Return only the emails of matching contacts                          | *(none)*                                                               |
+| **GET**  | `/contact/del?id=1`                                | Delete a contact by ID                                               | *(none)*                                                               |
+
+
+
+**Label**
+| Method   | URL               | Description          | Body Example            |
+| -------- | ----------------- | -------------------- | ----------------------- |
+| **POST** | `/label/create`   | Create a label       | `{ "name": "friends" }` |
+| **GET**  | `/label/list`     | List all labels      | *(none)*                |
+| **GET**  | `/label/del?id=3` | Delete a label by ID | *(none)*                |
+
+**Relations**
+| Method   | URL                     | Description                                        | Body Example                                              |
+| -------- | ----------------------- | -------------------------------------------------- | --------------------------------------------------------- |
+| **POST** | `/contact/add_label`    | Add labels to a contact; creates labels if missing | `{ "contact_id": 1, "labels": ["friends", "favorites"] }` |
+| **POST** | `/contact/remove_label` | Remove labels from a contact                       | `{ "contact_id": 1, "labels": ["friends"] }`              |
+
+
