@@ -50,27 +50,41 @@ def contact_create(request):
 def contact_list(request):
     qs = Contact.objects.all()
 
-    labels_param = request.GET.get("labels", "")
+    labels_param = request.GET.get("labels", "").strip()
     emails_only = request.GET.get("emails_only", "").lower() in ("1", "true", "yes")
+    match_mode = request.GET.get("match", "or").lower()   # default: or
 
     if labels_param:
         label_names = [n.strip() for n in labels_param.split(",") if n.strip()]
         if not label_names:
-            return HttpResponseBadRequest("valid label names should be seperated by ','")
-        qs = qs.filter(labels__name__in=label_names).distinct()
+            return HttpResponseBadRequest("valid label names should be separated by ','")
 
+        if match_mode == "or":
+            # OR: contact has ANY of the labels
+            qs = qs.filter(labels__name__in=label_names).distinct()
+
+        elif match_mode == "and":
+            # AND: contact must have ALL labels
+            for name in label_names:
+                qs = qs.filter(labels__name=name)
+            qs = qs.distinct()
+        else:
+            return HttpResponseBadRequest("match must be 'and' or 'or'")
+
+    # Bonus: email-only mode
     if emails_only:
         emails = qs.values_list("email", flat=True).distinct()
         return JsonResponse({"emails": list(emails)})
 
+    # Full contact list
     contacts = []
-    for a_contact in qs.prefetch_related("labels"):
+    for c in qs.prefetch_related("labels"):
         contacts.append({
-            "id": a_contact.id,
-            "name": a_contact.name,
-            "email": a_contact.email,
-            "phone": a_contact.phone,
-            "labels": [a_label.name for a_label in a_contact.labels.all()],
+            "id": c.id,
+            "name": c.name,
+            "email": c.email,
+            "phone": c.phone,
+            "labels": [a_label.name for a_label in c.labels.all()],
         })
 
     return JsonResponse(contacts, safe=False)
@@ -88,8 +102,8 @@ def label_create(request):
     if not name:
         return HttpResponseBadRequest("name is required")
 
-    label, created = Label.objects.get_or_create(name=name)
-    return JsonResponse({"id": label.id, "name": label.name, "created": created})
+    a_label, created = Label.objects.get_or_create(name=name)
+    return JsonResponse({"id": a_label.id, "name": a_label.name, "created": created})
 
 
 @require_http_methods(["GET"])
@@ -123,14 +137,14 @@ def add_label(request):
 
     labels = []
     for name in label_names:
-        a_lbl, _ = Label.objects.get_or_create(name=name)
-        labels.append(a_lbl)
+        a_label, _ = Label.objects.get_or_create(name=name)
+        labels.append(a_label)
 
     contact.labels.add(*labels)
 
     return JsonResponse({
         "contact_id": contact.id,
-        "labels": [a_lbl.name for a_lbl in contact.labels.all()]
+        "labels": [a_label.name for a_label in contact.labels.all()]
     })
 
 
@@ -154,5 +168,5 @@ def remove_label(request):
 
     return JsonResponse({
         "contact_id": contact.id,
-        "labels": [a_lbl.name for a_lbl in contact.labels.all()]
+        "labels": [a_label.name for a_label in contact.labels.all()]
     })

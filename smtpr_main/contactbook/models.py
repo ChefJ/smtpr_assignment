@@ -7,7 +7,7 @@ class Label(models.Model):
     name = models.CharField(max_length=100, unique=True)
     created_date = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(default=False)
-    # instead of deleting right away we hide the 'deleted' ones and detect & delete them every 24 hours
+    # TODO:instead of deleting right away we hide the 'deleted' ones and detect & delete them every 24 hours
 
     def __str__(self):
         return self.name
@@ -24,7 +24,6 @@ class Contact(models.Model):
                                     blank=True)
 
     is_deleted = models.BooleanField(default=False)
-    # instead of deleting right away we hide the 'deleted' ones and detect & delete them every 24 hours
 
     def __str__(self):
         return self.name

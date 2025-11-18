@@ -144,6 +144,7 @@ class ContactAPITestCase(TestCase):
         # data init
         lbl_friends = Label.objects.create(name="lbl_friends")
         lbl_work = Label.objects.create(name="lbl_work")
+        lbl_bff = Label.objects.create(name="lbl_bff")
 
         c1 = Contact.objects.create(
             name="Boss smart pr", email="a1@smart.pr", phone="111"
@@ -155,17 +156,22 @@ class ContactAPITestCase(TestCase):
             name="Bol boss", email="a3@bol.com", phone="333"
         )
 
+        c4 = Contact.objects.create(
+            name="Bol lil boss", email="a4@bol.com", phone="444"
+        )
+
         c1.labels.add(lbl_friends) # Boss smart pr is now our friend
         c2.labels.add(lbl_work) # reporter is for work
+        c2.labels.add(lbl_bff) # reporter is also bff
         c3.labels.add(lbl_friends, lbl_work) # BOL boss is both friend and work
 
         # return all 3 when not filtering by labels
         resp_all = self.client.get("/contactbook/contact/list")
         self.assertEqual(resp_all.status_code, 200)
         data_all = resp_all.json()
-        self.assertEqual(len(data_all), 3)
+        self.assertEqual(len(data_all), 4)
 
-        # filter by label: labels=lbl_friends
+        # filter by one label: labels=lbl_friends
         resp_friends = self.client.get("/contactbook/contact/list?labels=lbl_friends")
         self.assertEqual(resp_friends.status_code, 200)
         data_friends = resp_friends.json()
@@ -173,12 +179,32 @@ class ContactAPITestCase(TestCase):
         ids = {c["id"] for c in data_friends}
         self.assertSetEqual(ids, {c1.id, c3.id})
 
-        # mult label：?labels=lbl_friends,lbl_work
+        # filter by mult label：?labels=lbl_friends,lbl_work
         resp_multi = self.client.get("/contactbook/contact/list?labels=lbl_friends,lbl_work")
         self.assertEqual(resp_multi.status_code, 200)
         data_multi = resp_multi.json()
-        # should return only 1 obj
         self.assertEqual(len(data_multi), 3)
+
+        # filter by mult label but with OR mode
+        resp_multi = self.client.get("/contactbook/contact/list?labels=lbl_bff,lbl_work,lbl_friends&match=or")
+        self.assertEqual(resp_multi.status_code, 200)
+        data_multi = resp_multi.json()
+        # should be c2, c1 and c3
+        self.assertEqual(len(data_multi), 3)
+
+        # filter by mult label but with AND mode
+        resp_multi = self.client.get("/contactbook/contact/list?labels=lbl_bff,lbl_work&match=and")
+        self.assertEqual(resp_multi.status_code, 200)
+        data_multi = resp_multi.json()
+        # should return 1, c2
+        self.assertEqual(len(data_multi), 1)
+
+        # filter by mult label but with AND mode
+        resp_multi = self.client.get("/contactbook/contact/list?labels=lbl_bff,lbl_friends,lbl_work&match=and")
+        self.assertEqual(resp_multi.status_code, 200)
+        data_multi = resp_multi.json()
+        # should return 0
+        self.assertEqual(len(data_multi), 0)
 
     def test_contact_list_emails_only(self):
         label = Label.objects.create(name="friends")

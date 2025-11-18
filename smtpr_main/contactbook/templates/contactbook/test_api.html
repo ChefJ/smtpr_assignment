@@ -6,69 +6,119 @@
   <title>Address Book API Test</title>
   <meta name="csrf-token" content="{{ csrf_token }}">
   <style>
-    body { font-family: sans-serif; margin: 20px; }
-    h2 { margin-top: 30px; }
-    fieldset { margin-bottom: 20px; }
-    input, button { margin: 4px 0; }
-    .section { border: 1px solid #ddd; padding: 10px 15px; margin-bottom: 15px; }
-    pre { background: #f7f7f7; padding: 10px; max-height: 300px; overflow: auto; }
-    label { display: block; margin-top: 4px; }
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      background: #f5f5f7;
+    }
+    h1 { margin-bottom: 16px; }
+    h2 { margin: 0 0 10px; }
+    input, button, select { margin: 4px 0; padding: 4px 6px; font-size: 0.9rem; }
+    label { display: block; margin-top: 4px; font-size: 0.9rem; }
+
+    .layout {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .left-column, .right-column {
+      flex: 1 1 0;
+    }
+
+    .section {
+      border: 1px solid #ddd;
+      padding: 10px 15px;
+      margin-bottom: 12px;
+      border-radius: 6px;
+      background: #fff;
+    }
+    pre {
+      background: #111827;
+      color: #e5e7eb;
+      padding: 10px;
+      max-height: 80vh;
+      overflow: auto;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+
   </style>
 </head>
 <body>
 <h1>Address Book API Test</h1>
 
-<div class="section">
-  <h2>Create Contact</h2>
-  <label>Name: <input type="text" id="create_name"></label>
-  <label>Email: <input type="email" id="create_email"></label>
-  <label>Phone: <input type="text" id="create_phone"></label>
-  <button onclick="createContact()">Create Contact</button>
-</div>
+<div class="layout">
+  <div class="left-column">
+    <div class="section">
+      <h2>Create Contact</h2>
+      <label>Name: <input type="text" id="create_name"></label>
+      <label>Email: <input type="email" id="create_email"></label>
+      <label>Phone: <input type="text" id="create_phone"></label>
+      <button class="btn btn-primary" onclick="createContact()">Create Contact</button>
+    </div>
 
-<div class="section">
-  <h2>Create Label</h2>
-  <label>Label name: <input type="text" id="create_label_name"></label>
-  <button onclick="createLabel()">Create Label</button>
-</div>
+    <div class="section">
+      <h2>Create Label</h2>
+      <label>Label name: <input type="text" id="create_label_name"></label>
+      <button class="btn btn-primary" onclick="createLabel()">Create Label</button>
+    </div>
 
-<div class="section">
-  <h2>Add Labels to Contact</h2>
-  <label>Contact ID: <input type="number" id="add_label_contact_id"></label>
-  <label>Labels (comma separated names): <input type="text" id="add_label_names" placeholder="friends,favorites"></label>
-  <button onclick="addLabelsToContact()">Add Labels</button>
-</div>
+    <div class="section">
+      <h2>List Contacts</h2>
+      <label>Filter by labels (comma separated names):
+        <input type="text" id="list_labels" placeholder="friends,favorites">
+      </label>
+      <label><input type="checkbox" id="emails_only"> Emails only</label>
+      <label>Match mode:
+        <select id="match_mode">
+          <option value="or" selected>OR (any label)</option>
+          <option value="and">AND (all labels)</option>
+        </select>
+      </label>
+      <button class="btn" onclick="listContacts()">Fetch</button>
+    </div>
 
-<div class="section">
-  <h2>Remove Labels from Contact</h2>
-  <label>Contact ID: <input type="number" id="remove_label_contact_id"></label>
-  <label>Labels (comma separated names): <input type="text" id="remove_label_names" placeholder="friends,favorites"></label>
-  <button onclick="removeLabelsFromContact()">Remove Labels</button>
-</div>
+    <div class="section">
+      <h2>List Labels</h2>
+      <button class="btn" onclick="listLabels()">Fetch Labels</button>
+    </div>
 
-<div class="section">
-  <h2>List Contacts</h2>
-  <label>Filter by labels (comma separated names): <input type="text" id="list_labels" placeholder="friends,favorites"></label>
-  <label><input type="checkbox" id="emails_only"> Emails only</label>
-  <button onclick="listContacts()">Fetch</button>
-</div>
+    <div class="section">
+      <h2>Delete Contact / Label</h2>
+      <label>Contact ID to delete: <input type="number" id="del_contact_id"></label>
+      <button class="btn btn-danger" onclick="deleteContact()">Delete Contact (GET)</button>
+      <br>
+      <label>Label ID to delete: <input type="number" id="del_label_id"></label>
+      <button class="btn btn-danger" onclick="deleteLabel()">Delete Label (GET)</button>
+    </div>
 
-<div class="section">
-  <h2>List Labels</h2>
-  <button onclick="listLabels()">Fetch Labels</button>
-</div>
+    <div class="section">
+      <h2>Add Labels to Contact</h2>
+      <label>Contact ID: <input type="number" id="add_label_contact_id"></label>
+      <label>Labels (comma separated names):
+        <input type="text" id="add_label_names" placeholder="friends,favorites">
+      </label>
+      <button class="btn btn-primary" onclick="addLabelsToContact()">Add Labels</button>
+    </div>
 
-<div class="section">
-  <h2>Delete Contact / Label</h2>
-  <label>Contact ID to delete: <input type="number" id="del_contact_id"></label>
-  <button onclick="deleteContact()">Delete Contact (GET)</button>
-  <br>
-  <label>Label ID to delete: <input type="number" id="del_label_id"></label>
-  <button onclick="deleteLabel()">Delete Label (GET)</button>
-</div>
+    <div class="section">
+      <h2>Remove Labels from Contact</h2>
+      <label>Contact ID: <input type="number" id="remove_label_contact_id"></label>
+      <label>Labels (comma separated names):
+        <input type="text" id="remove_label_names" placeholder="friends,favorites">
+      </label>
+      <button class="btn btn-danger" onclick="removeLabelsFromContact()">Remove Labels</button>
+    </div>
+  </div>
 
-<h2>Result</h2>
-<pre id="result"></pre>
+  <div class="right-column">
+    <div class="section">
+      <h2>Result</h2>
+      <pre id="result">Try the buttons to get response.</pre>
+    </div>
+  </div>
+</div>
 
 <script>
   function getCSRFToken() {
@@ -154,12 +204,14 @@
   async function listContacts() {
     const labels = document.getElementById('list_labels').value.trim();
     const emailsOnly = document.getElementById('emails_only').checked;
+    const match = document.getElementById('match_mode').value;
 
     const params = new URLSearchParams();
     if (labels) params.append("labels", labels);
     if (emailsOnly) params.append("emails_only", "1");
+    params.append("match", match);
 
-    const url = "/contactbook/contact/list" + (params.toString() ? "?" + params.toString() : "");
+    const url = "/contactbook/contact/list" + "?" + params.toString();
     const resp = await fetch(url);
     showResult(await resp.json());
   }
