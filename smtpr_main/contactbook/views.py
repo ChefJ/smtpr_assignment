@@ -50,9 +50,9 @@ def contact_create(request):
 def contact_list(request):
     qs = Contact.objects.all()
 
-    labels_param = request.GET.get("labels", "").strip()
+    labels_param = request.GET.get("labels", "").strip()  # Just in case there's blank spaces
     emails_only = request.GET.get("emails_only", "").lower() in ("1", "true", "yes")
-    match_mode = request.GET.get("match", "or").lower()   # default: or
+    match_mode = request.GET.get("match", "or").lower()  # default: or
 
     if labels_param:
         label_names = [n.strip() for n in labels_param.split(",") if n.strip()]
@@ -102,7 +102,7 @@ def label_create(request):
     if not name:
         return HttpResponseBadRequest("name is required")
 
-    a_label, created = Label.objects.get_or_create(name=name)
+    a_label, created = Label.objects.get_or_create(name=name.strip()) # Just in case there's blank spaces
     return JsonResponse({"id": a_label.id, "name": a_label.name, "created": created})
 
 
@@ -125,7 +125,7 @@ def true_del(request):
 def add_label(request):
     data = parse_body(request)
     contact_id = data.get("contact_id")
-    label_names = data.get("labels", [])  # 这里用 label 名，会比较直观
+    label_names = data.get("labels", [])  # return empty list for label if there's none provided
 
     if not contact_id or not label_names:
         return HttpResponseBadRequest("contact_id and labels are required")
@@ -137,7 +137,7 @@ def add_label(request):
 
     labels = []
     for name in label_names:
-        a_label, _ = Label.objects.get_or_create(name=name)
+        a_label, _ = Label.objects.get_or_create(name=name.strip()) # Just in case there's blank spaces
         labels.append(a_label)
 
     contact.labels.add(*labels)
