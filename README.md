@@ -32,13 +32,16 @@ your_name_of_env\Scripts\activate
 ```bash
 source your_name_of_env/bin/activate
 ```
-### 3. Install dependencies
+### 3. Git Clone and Install dependencies
 ```bash
+git clone https://github.com/ChefJ/smtpr_assignment.git
+cd smtpr_assignment
 pip install -r req.txt
 ```
 
 ### 4. Prepare database
 ```bash
+cd smtpr_main
 python manage.py makemigrations
 python manage.py migrate
 ```
