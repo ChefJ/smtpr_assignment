@@ -35,9 +35,9 @@ def parse_body(request):
 @require_http_methods(["POST"])
 def contact_create(request):
     data = parse_body(request)
-    name = data.get("name")
-    email = data.get("email")
-    phone = data.get("phone")
+    name = data.get("name", None)
+    email = data.get("email", None)
+    phone = data.get("phone", None)
 
     if not name or not email or not phone:
         return HttpResponseBadRequest("name, phone and email are required")
@@ -46,25 +46,21 @@ def contact_create(request):
     return JsonResponse({"id": contact.id, "name": contact.name, "email": contact.email, "phone": contact.phone})
 
 
-@require_http_methods(["POST"])
+@require_http_methods(["GET"])
 def contact_list(request):
     qs = Contact.objects.all()
 
     labels_param = request.GET.get("labels", "")
+    emails_only = request.GET.get("emails_only", "").lower() in ("1", "true", "yes")
+
     if labels_param:
         label_names = [n.strip() for n in labels_param.split(",") if n.strip()]
         if not label_names:
-            return HttpResponseBadRequest("no valid label names")
+            return HttpResponseBadRequest("valid label names should be seperated by ','")
         qs = qs.filter(labels__name__in=label_names).distinct()
 
-    emails_only = request.GET.get("emails_only", "").lower() in ("1", "true", "yes")
-
     if emails_only:
-        emails = (
-            qs.exclude(email="")
-            .values_list("email", flat=True)
-            .distinct()
-        )
+        emails = qs.values_list("email", flat=True).distinct()
         return JsonResponse({"emails": list(emails)})
 
     contacts = []
@@ -88,7 +84,7 @@ def contact_del(request):
 @require_http_methods(["POST"])
 def label_create(request):
     data = parse_body(request)
-    name = data.get("name")
+    name = data.get("name", None)
     if not name:
         return HttpResponseBadRequest("name is required")
 
@@ -123,18 +119,18 @@ def add_label(request):
     try:
         contact = Contact.objects.get(id=contact_id)
     except Contact.DoesNotExist:
-        return HttpResponseBadRequest("contact not found")
+        return HttpResponseBadRequest("contact with id" + str(contact_id) + "not found")
 
     labels = []
     for name in label_names:
-        lbl, _ = Label.objects.get_or_create(name=name)
-        labels.append(lbl)
+        a_lbl, _ = Label.objects.get_or_create(name=name)
+        labels.append(a_lbl)
 
     contact.labels.add(*labels)
 
     return JsonResponse({
         "contact_id": contact.id,
-        "labels": [l.name for l in contact.labels.all()]
+        "labels": [a_lbl.name for a_lbl in contact.labels.all()]
     })
 
 
@@ -158,5 +154,5 @@ def remove_label(request):
 
     return JsonResponse({
         "contact_id": contact.id,
-        "labels": [l.name for l in contact.labels.all()]
+        "labels": [a_lbl.name for a_lbl in contact.labels.all()]
     })

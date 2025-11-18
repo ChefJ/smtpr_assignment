@@ -5,7 +5,7 @@ from . import views
 urlpatterns = [
     path("contact/list", views.contact_list, name="contact_list"),
     path("contact/create", views.contact_create, name="contact_create"),
-    path("contact/del/", views.contact_del, name="contact_del"),
+    path("contact/del", views.contact_del, name="contact_del"),
 
     path("label/list", views.label_list, name="label_list"),
     path("label/create", views.label_create, name="label_create"),
